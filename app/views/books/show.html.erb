@@ -40,6 +40,20 @@
                 <%= link_to(book_path(@books.user.id)) do %><%= @books.title %><% end %>
               </td>
               <td><%= @books.body %></td>
+
+            <%# #いいね機能 %>
+            <td>
+              <% if @books.favorited_by?(current_user) %>
+                <%= link_to book_favorite_path(@books), method: :delete do %>
+                  ♥<%= @books.favorites.count %> いいね
+                <% end %>
+              <% else %>
+                <%= link_to book_favorite_path(@books), method: :post do %>
+                  ♡<%= @books.favorites.count %> いいね
+                <% end %>
+              <% end %>
+            </td>
+
               <% if @books.user == current_user %>
               <td><%= link_to 'Edit', edit_book_path(@books), class: "btn btn-sm btn-success edit_book_3769" %></td>
               <td><%= link_to 'Destroy', book_path(@books), class: "btn btn-sm btn-danger destroy_book_3769", method: :delete, data: { confirm: '本当に消しますか?' } %></td>
@@ -47,6 +61,46 @@
             </tr>
         </tbody>
 	    </table>
+
+			<!-- コメント表示エリア -->
+    <div id="comment-area" class="mt-4">
+      <!-- コメント件数表示 -->
+      <h4 class="mb-3">コメント件数：<%= @books.post_comments.count %>件</h4>
+
+      <!-- コメント一覧 -->
+      <% @books.post_comments.each do |post_comment| %>
+        <div class="media mb-3 p-3 border rounded">
+          <%= image_tag post_comment.user.get_profile_image(50, 50), class: "mr-3 rounded-circle" %>
+          <div class="media-body">
+            <!-- ユーザー名とコメント投稿日時 -->
+            <div class="d-flex justify-content-between align-items-center">
+              <div>
+                <%= link_to post_comment.user.name, user_path(post_comment.user), class: "font-weight-bold" %>
+                <small class="text-muted ml-2"><%= post_comment.created_at.strftime('%Y/%m/%d') %></small>
+              </div>
+              <!-- コメント削除ボタン (投稿者のみ表示) -->
+              <% if post_comment.user == current_user %>
+                <%= link_to '削除', book_post_comment_path(post_comment.book, post_comment), method: :delete, data: { confirm: 'コメントを削除しますか?' }, class: "btn btn-danger btn-sm" %>
+              <% end %>
+            </div>
+            <!-- コメント本文 -->
+            <p class="mt-1 mb-0"><%= post_comment.comment %></p>
+          </div>
+        </div>
+      <% end %>
+    </div>
+
+    <!-- コメント投稿フォームエリア -->
+    <div class="mt-5">
+      <h4 class="mb-3">コメントを投稿する</h4>
+      <%= form_with model: [@books, @post_comment], local: true do |f| %>
+        <div class="form-group">
+          <%= f.text_area :comment, rows: '5', placeholder: "コメントをここに", class: "form-control" %>
+        </div>
+        <%= f.submit "送信する", class: "btn btn-success" %>
+      <% end %>
+    </div>
 	  </div>
 	</div>
 </div>
+
